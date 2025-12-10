@@ -1,0 +1,423 @@
+{
+  "name": "Myfinalwork",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -944,
+        -48
+      ],
+      "id": "5907fe9b-0852-4f8c-952a-8d6f088f9b4b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use {{ $json.topic }} to generate LinkedIn post.\n\nWrite an engaging and informative LinkedIn post on the topic.\nStart with an attention-grabbing hook that entices readers to read further.\nProvide valuable insights or actionable tips related to the topic.\nThe tone should be professional, clear, and concise, using language that's easy to understand.\nEnd with a call to action (CTA) encouraging the audience to engage, reflect, or share their thoughts.\nInclude relevant hashtags to increase engagement and visibility on LinkedIn. Make sure these hashtags are specific to the topic and aligned with trending keywords for LinkedIn posts.\n\n\n\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -416,
+        -48
+      ],
+      "id": "d64b6f97-96a2-42a4-8554-ad6705eda7be",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        160
+      ],
+      "id": "ffbc2265-f2f8-4eba-a94e-a9c2d40be060",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "LemY7VOkDzlLrGi0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "2mZ9fvBqF9",
+        "text": "={{ $('Basic LLM Chain').item.json.text }}\n\nFollow for more!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -224
+      ],
+      "id": "d60e5c69-ab23-4d23-b2d5-acf114fbe7f4",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "L0MXEt2e5m2uK1qr",
+          "name": "LinkedIn account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7848489613",
+        "text": "=Posted on LinkedIn  {{ $json.urn }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        -224
+      ],
+      "id": "d1fe294e-2cd4-4cb7-901c-92b1f9a47879",
+      "name": "Send a text message",
+      "webhookId": "f150b2be-f8e6-435a-9935-afbbffbab8cb",
+      "credentials": {
+        "telegramApi": {
+          "id": "tmTE5J0ldM4z1gWx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cfbd97a2-33fe-406a-afae-6895a07b4c47",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        -112
+      ],
+      "id": "e6cef425-c9e4-43d3-9fd5-a3621846ca2d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "vsalgm1994@gmail.com",
+        "subject": "Approval",
+        "message": "=Do you approve it? \n\n{{ $json.text }}\n",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        -48
+      ],
+      "id": "c391a8ec-0129-4ccd-96a2-d50ab31b04aa",
+      "name": "Send message and wait for response",
+      "webhookId": "c9941a51-81c1-44df-bbe7-7bc2c5948ebd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ET0Z7NKAOFQEEFug",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "vsalgm1994@gmail.com",
+        "subject": "Approval",
+        "message": "=Do you want to generate another post for Linkedin?\n\n{{ $json.text }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "04c4fe0d-3197-49f1-b0aa-9e28ba0729d7",
+      "name": "Send message and wait for response1",
+      "webhookId": "c9941a51-81c1-44df-bbe7-7bc2c5948ebd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ET0Z7NKAOFQEEFug",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0725d406-b26f-4da9-b6bb-5ce2d2cebeb3",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "8505b69d-96d0-46d7-87e2-38453c84c43d",
+      "name": "If1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        784,
+        80
+      ],
+      "id": "cf3e1fa1-dda3-4ec2-b856-1b8981604604",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -944,
+        -352
+      ],
+      "id": "70f81608-b988-49d9-8811-0794c78a8776",
+      "name": "Telegram Trigger",
+      "webhookId": "f07ff987-a272-4838-a127-d36460c50415",
+      "credentials": {
+        "telegramApi": {
+          "id": "tmTE5J0ldM4z1gWx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "696eefc7-2972-412c-8e06-02979f76350f",
+              "name": "topic",
+              "value": "={{ $json.message.text.split(\" \").slice(1).join(\" \") || null}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -736,
+        -352
+      ],
+      "id": "cd24afd7-9196-4e16-8596-38211aeaaffa",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message and wait for response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f6c18745-966a-4a8d-9aa6-c9ef6e1a28b9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "004060820433971467469152241980a70b4ef124997d83a8479ea0d3c501421f"
+  },
+  "id": "CAFsqCLiQajZJyc1",
+  "tags": []
+}
