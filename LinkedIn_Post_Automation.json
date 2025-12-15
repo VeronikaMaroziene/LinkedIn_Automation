@@ -1,0 +1,684 @@
+{
+  "name": "LinkedIn_Post_Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "person": "2mZ9fvBqF9",
+        "text": "={{ $('AgentJudge').item.json.output }}\nFollow for more!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "95d3686a-bb7c-41e2-9185-92198ddbb74a",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "L0MXEt2e5m2uK1qr",
+          "name": "LinkedIn account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7848489613",
+        "text": "=Posted on LinkedIn  {{ $('AgentJudge').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        0
+      ],
+      "id": "634775fc-cba1-4c3f-a692-54c72530b8fb",
+      "name": "Send a text message",
+      "webhookId": "f150b2be-f8e6-435a-9935-afbbffbab8cb",
+      "credentials": {
+        "telegramApi": {
+          "id": "tmTE5J0ldM4z1gWx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cfbd97a2-33fe-406a-afae-6895a07b4c47",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        112
+      ],
+      "id": "692fee3e-bebd-427c-ac61-2398e50fb717",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "vsalgm1994@gmail.com",
+        "subject": "Approval",
+        "message": "=Do you approve it? \n\n{{ $json.output }}\n",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        176
+      ],
+      "id": "fc8bca18-179a-4841-8d19-0070582cf521",
+      "name": "Send message and wait for response",
+      "webhookId": "c9941a51-81c1-44df-bbe7-7bc2c5948ebd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ET0Z7NKAOFQEEFug",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        576,
+        224
+      ],
+      "id": "c624f005-8a42-400f-a416-30a11ab205a0",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2160,
+        208
+      ],
+      "id": "8cc5c13a-43ab-469e-8fc9-646467181c77",
+      "name": "Telegram Trigger",
+      "webhookId": "f07ff987-a272-4838-a127-d36460c50415",
+      "credentials": {
+        "telegramApi": {
+          "id": "tmTE5J0ldM4z1gWx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        576
+      ],
+      "id": "e0a35afb-1246-41bd-b699-4801c967f0bc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ap8pwBqrPJpA1cyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {
+          "systemMessage": "=Use {{ $('Telegram Trigger').item.json.message.text }}to generate LinkedIn post.\n\nWrite an engaging and informative LinkedIn post on the topic.\nStart with an attention-grabbing hook that entices readers to read further.\nProvide valuable insights or actionable tips related to the topic.\nThe tone should be professional, clear, and concise, using language that's easy to understand.\nEnd with a call to action (CTA) encouraging the audience to engage, reflect, or share their thoughts.\nInclude relevant hashtags to increase engagement and visibility on LinkedIn. Make sure these hashtags are specific to the topic and aligned with trending keywords for LinkedIn posts.\nInclude the text generated in the email to approve.\nAlso do not include the text like \"Absolutely\".\nYou are given a list of previously approved LinkedIn posts (\"memory\").\nYour job is to generate a New post that does not repeat:\n-The same core insights or main message of the post\n\nMemory (previous posts):\n{{ $json.Summary }}\n\nYou must actively compare agains the memory before writing a new post."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        416
+      ],
+      "id": "a17895e9-8435-437d-b058-817d00ec3cae",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -672,
+        192
+      ],
+      "id": "60912699-b5a2-40d5-a9fb-91aebe1e7205",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<Agent 1>{{ $json.deepseek }}</Agent1>\n<Agent 2>{{ $json.gemini }}</Agent2>\n",
+        "options": {
+          "systemMessage": "You go through the results provided by two AI agents and combine them into a single cohesive output based on the uniqueness of the know-how information. Always choose the most unique and interesting information for the post."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -464,
+        192
+      ],
+      "id": "ebe640f2-6e0a-4594-931f-9f9ef7208bf4",
+      "name": "AgentJudge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -16
+      ],
+      "id": "c4599387-5963-455e-9998-0ed42e308593",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "JfsGnbL2vEEHfWg5",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fmfVwTNiMT8TvzY86fjeioSSr9ms-YRq4Ph0TPv_Ihs",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fmfVwTNiMT8TvzY86fjeioSSr9ms-YRq4Ph0TPv_Ihs/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1920,
+        208
+      ],
+      "id": "3119e4fe-dc87-4810-aa20-0e7e119bee56",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wPyw0Z9IcOWHLF5f",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        448
+      ],
+      "id": "d1dfba2f-75cc-4a57-a76d-a7e48dfda57e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "LemY7VOkDzlLrGi0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1fmfVwTNiMT8TvzY86fjeioSSr9ms-YRq4Ph0TPv_Ihs",
+          "mode": "list",
+          "cachedResultName": "n8nLinkedin",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fmfVwTNiMT8TvzY86fjeioSSr9ms-YRq4Ph0TPv_Ihs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fmfVwTNiMT8TvzY86fjeioSSr9ms-YRq4Ph0TPv_Ihs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Topic": "={{ $('Telegram Trigger').item.json.message.text }}",
+            "Hook": "={{ $('Telegram Trigger').item.json.update_id }}",
+            "Summary": "={{ $('AgentJudge').item.json.output }}"
+          },
+          "matchingColumns": [
+            "Summary"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hook",
+              "displayName": "Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        -48
+      ],
+      "id": "95e2e416-8602-4632-808c-da8a040af4cb",
+      "name": "Append row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wPyw0Z9IcOWHLF5f",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"topic\": \"\",\n  \"Summary\": \"\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1712,
+        208
+      ],
+      "id": "e5cc02e9-6a1e-42ab-ac04-8eeb5ebd0208",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Summary }}",
+        "options": {
+          "systemMessage": "=Use{{ $('Telegram Trigger').item.json.message.text }} to generate LinkedIn post.\n\nWrite an engaging and informative LinkedIn post on the topic.\nStart with an attention-grabbing hook that entices readers to read further.\nProvide valuable insights or actionable tips related to the topic.\nThe tone should be professional, clear, and concise, using language that's easy to understand.\nEnd with a call to action (CTA) encouraging the audience to engage, reflect, or share their thoughts.\nInclude relevant hashtags to increase engagement and visibility on LinkedIn. Make sure these hashtags are specific to the topic and aligned with trending keywords for LinkedIn posts.\nInclude the text generated in the email to approve.\nAlso do not include the text like \"Absolutely\".\nYou are given a list of previously approved LinkedIn posts (\"memory\").\nYour job is to generate a New post that does not repeat:\n-The same core insights or main message of the post\n\nMemory (previous posts):\n{{ $json.Summary }}\n\nYou must actively compare agains the memory before writing a new post.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        -240
+      ],
+      "id": "8453d6e5-a972-4332-b300-98c306a894ef",
+      "name": "AI Agent 1"
+    },
+    {
+      "parameters": {
+        "keys": {
+          "key": [
+            {
+              "currentKey": "output",
+              "newKey": "deepseek"
+            }
+          ]
+        },
+        "additionalOptions": {}
+      },
+      "type": "n8n-nodes-base.renameKeys",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        -128
+      ],
+      "id": "4cf546a2-97b2-45a5-b52e-682568d537bc",
+      "name": "rename Key 1"
+    },
+    {
+      "parameters": {
+        "keys": {
+          "key": [
+            {
+              "currentKey": "output",
+              "newKey": "gemini"
+            }
+          ]
+        },
+        "additionalOptions": {}
+      },
+      "type": "n8n-nodes-base.renameKeys",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        384
+      ],
+      "id": "41d64812-7bf1-40ee-91b2-bbb6d538949f",
+      "name": "Rename Keys2"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 514063210,
+          "message": {
+            "message_id": 118,
+            "from": {
+              "id": 7848489613,
+              "is_bot": false,
+              "first_name": "Veronika",
+              "last_name": "Ma",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 7848489613,
+              "first_name": "Veronika",
+              "last_name": "Ma",
+              "type": "private"
+            },
+            "date": 1765559691,
+            "text": "AI trends"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Rename Keys2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AgentJudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AgentJudge": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AgentJudge",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 1": {
+      "main": [
+        [
+          {
+            "node": "rename Key 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rename Key 1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename Keys2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5b1160a6-fd88-494c-bacd-6fa8cb2c03b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "004060820433971467469152241980a70b4ef124997d83a8479ea0d3c501421f"
+  },
+  "id": "AMicvjRcPGIMEQVM",
+  "tags": []
+}
